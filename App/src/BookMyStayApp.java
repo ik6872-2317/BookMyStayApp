@@ -1,96 +1,47 @@
-/**
- * UseCase2RoomInitialization
- *
- * This class demonstrates object-oriented modeling of hotel rooms using
- * inheritance and abstraction. It shows basic room types and static availability.
- *
- * @author Student
- * @version 2.1
- */
+import java.util.HashMap;
+import java.util.Map;
 
-abstract class Room {
-    private String roomType;
-    private int numberOfBeds;
-    private double size; // in square meters
-    private double pricePerNight;
+class RoomInventory {
 
-    public Room(String roomType, int numberOfBeds, double size, double pricePerNight) {
-        this.roomType = roomType;
-        this.numberOfBeds = numberOfBeds;
-        this.size = size;
-        this.pricePerNight = pricePerNight;
+    // Centralized data structure
+    private HashMap<String, Integer> inventory;
+
+    // Constructor to initialize inventory
+    public RoomInventory() {
+        inventory = new HashMap<>();
     }
 
-    public String getRoomType() {
-        return roomType;
+    // Register a room type with count
+    public void addRoomType(String roomType, int count) {
+        inventory.put(roomType, count);
     }
 
-    public int getNumberOfBeds() {
-        return numberOfBeds;
+    // Get availability of a specific room type
+    public int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
     }
 
-    public double getSize() {
-        return size;
+    // Update availability (controlled update)
+    public void updateAvailability(String roomType, int change) {
+        if (inventory.containsKey(roomType)) {
+            int current = inventory.get(roomType);
+            int updated = current + change;
+
+            if (updated >= 0) {
+                inventory.put(roomType, updated);
+            } else {
+                System.out.println("Error: Cannot reduce below zero for " + roomType);
+            }
+        } else {
+            System.out.println("Error: Room type not found: " + roomType);
+        }
     }
 
-    public double getPricePerNight() {
-        return pricePerNight;
-    }
-
-    public void displayRoomDetails() {
-        System.out.println("Room Type: " + roomType);
-        System.out.println("Number of Beds: " + numberOfBeds);
-        System.out.println("Size: " + size + " sqm");
-        System.out.println("Price per Night: $" + pricePerNight);
-    }
-}
-
-class SingleRoom extends Room {
-    public SingleRoom() {
-        super("Single Room", 1, 20.0, 50.0);
-    }
-}
-
-class DoubleRoom extends Room {
-    public DoubleRoom() {
-        super("Double Room", 2, 30.0, 80.0);
-    }
-}
-
-class SuiteRoom extends Room {
-    public SuiteRoom() {
-        super("Suite Room", 3, 50.0, 150.0);
-    }
-}
-
-public class BookMyStayApp {
-
-    // Static availability variables
-    private static int availableSingleRooms = 10;
-    private static int availableDoubleRooms = 5;
-    private static int availableSuiteRooms = 2;
-
-    public static void main(String[] args) {
-
-        // Create room objects
-        Room singleRoom = new SingleRoom();
-        Room doubleRoom = new DoubleRoom();
-        Room suiteRoom = new SuiteRoom();
-
-        System.out.println("=== Hotel Room Types & Availability ===\n");
-
-        // Display Single Room details and availability
-        singleRoom.displayRoomDetails();
-        System.out.println("Available: " + availableSingleRooms + "\n");
-
-        // Display Double Room details and availability
-        doubleRoom.displayRoomDetails();
-        System.out.println("Available: " + availableDoubleRooms + "\n");
-
-        // Display Suite Room details and availability
-        suiteRoom.displayRoomDetails();
-        System.out.println("Available: " + availableSuiteRooms + "\n");
-
-        System.out.println("Application terminated.");
+    // Display full inventory
+    public void displayInventory() {
+        System.out.println("\nCurrent Room Inventory:");
+        for (Map.Entry<String, Integer> entry : inventory.entrySet()) {
+            System.out.println(entry.getKey() + " : " + entry.getValue());
+        }
     }
 }
