@@ -1,137 +1,121 @@
 import java.util.*;
 
-// Booking Request Model
-class BookingRequest {
-    private String requestId;
+// Reservation Model
+class Reservation {
+    private String reservationId;
     private String roomType;
+    private String roomId;
 
-    public BookingRequest(String requestId, String roomType) {
-        this.requestId = requestId;
+    public Reservation(String reservationId, String roomType, String roomId) {
+        this.reservationId = reservationId;
         this.roomType = roomType;
+        this.roomId = roomId;
     }
 
-    public String getRequestId() {
-        return requestId;
+    public String getReservationId() {
+        return reservationId;
     }
 
     public String getRoomType() {
         return roomType;
     }
-}
 
-// Inventory Service
-class InventoryService {
-    private Map<String, Integer> inventory = new HashMap<>();
-
-    public InventoryService() {
-        inventory.put("Single", 2);
-        inventory.put("Double", 2);
-        inventory.put("Suite", 1);
-    }
-
-    public boolean isAvailable(String roomType) {
-        return inventory.getOrDefault(roomType, 0) > 0;
-    }
-
-    public void decrementInventory(String roomType) {
-        inventory.put(roomType, inventory.get(roomType) - 1);
-    }
-
-    public void displayInventory() {
-        System.out.println("Current Inventory: " + inventory);
-    }
-}
-
-// Room Allocation Service
-class RoomAllocationService {
-
-    private Queue<BookingRequest> requestQueue = new LinkedList<>();
-    private Set<String> allocatedRoomIds = new HashSet<>();
-    private Map<String, Set<String>> roomTypeToRooms = new HashMap<>();
-    private InventoryService inventoryService;
-
-    public RoomAllocationService(InventoryService inventoryService) {
-        this.inventoryService = inventoryService;
-    }
-
-    // Add booking request (FIFO queue)
-    public void addBookingRequest(BookingRequest request) {
-        requestQueue.offer(request);
-    }
-
-    // Generate unique room ID
-    private String generateRoomId(String roomType) {
-        String roomId;
-        do {
-            roomId = roomType.substring(0, 2).toUpperCase() + "-" + UUID.randomUUID().toString().substring(0, 5);
-        } while (allocatedRoomIds.contains(roomId));
+    public String getRoomId() {
         return roomId;
     }
 
-    // Process bookings
-    public void processBookings() {
-        while (!requestQueue.isEmpty()) {
-            BookingRequest request = requestQueue.poll();
-
-            System.out.println("\nProcessing Request: " + request.getRequestId());
-
-            String roomType = request.getRoomType();
-
-            // Check availability
-            if (!inventoryService.isAvailable(roomType)) {
-                System.out.println("No rooms available for type: " + roomType);
-                continue;
-            }
-
-            // Atomic Allocation Block
-            String roomId = generateRoomId(roomType);
-
-            // Ensure uniqueness
-            allocatedRoomIds.add(roomId);
-
-            // Map room type to allocated rooms
-            roomTypeToRooms.putIfAbsent(roomType, new HashSet<>());
-            roomTypeToRooms.get(roomType).add(roomId);
-
-            // Update inventory immediately
-            inventoryService.decrementInventory(roomType);
-
-            // Confirm reservation
-            System.out.println("Booking Confirmed!");
-            System.out.println("Room Type: " + roomType);
-            System.out.println("Allocated Room ID: " + roomId);
-        }
-    }
-
-    public void displayAllocations() {
-        System.out.println("\nFinal Room Allocations:");
-        for (Map.Entry<String, Set<String>> entry : roomTypeToRooms.entrySet()) {
-            System.out.println(entry.getKey() + " -> " + entry.getValue());
-        }
+    @Override
+    public String toString() {
+        return "Reservation ID: " + reservationId +
+                ", Room Type: " + roomType +
+                ", Room ID: " + roomId;
     }
 }
 
+// Booking History (Storage)
+class BookingHistory {
+
+    // Maintains insertion order
+    private List<Reservation> reservations = new ArrayList<>();
+
+    // Add confirmed reservation
+    public void addReservation(Reservation reservation) {
+        reservations.add(reservation);
+        System.out.println("Reservation stored: " + reservation.getReservationId());
+    }
+
+    // Retrieve all reservations
+    public List<Reservation> getAllReservations() {
+        return new ArrayList<>(reservations); // return copy (immutability safety)
+    }
+}
+
+// Booking Report Service
+class BookingReportService {
+
+    // Display all bookings
+    public void displayAllBookings(List<Reservation> reservations) {
+        System.out.println("\n--- Booking History ---");
+
+        if (reservations.isEmpty()) {
+            System.out.println("No bookings found.");
+            return;
+        }
+
+        for (Reservation res : reservations) {
+            System.out.println(res);
+        }
+    }
+
+    // Generate summary report
+    public void generateSummary(List<Reservation> reservations) {
+        System.out.println("\n--- Booking Summary Report ---");
+
+        Map<String, Integer> roomTypeCount = new HashMap<>();
+
+        for (Reservation res : reservations) {
+            roomTypeCount.put(
+                    res.getRoomType(),
+                    roomTypeCount.getOrDefault(res.getRoomType(), 0) + 1
+            );
+        }
+
+        for (Map.Entry<String, Integer> entry : roomTypeCount.entrySet()) {
+            System.out.println("Room Type: " + entry.getKey() +
+                    " | Total Bookings: " + entry.getValue());
+        }
+
+        System.out.println("Total Reservations: " + reservations.size());
+    }
+}
 
 // Main Class
 public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        InventoryService inventoryService = new InventoryService();
-        RoomAllocationService allocationService = new RoomAllocationService(inventoryService);
+        BookingHistory history = new BookingHistory();
+        BookingReportService reportService = new BookingReportService();
 
-        // Add sample booking requests
-        allocationService.addBookingRequest(new BookingRequest("REQ1", "Single"));
-        allocationService.addBookingRequest(new BookingRequest("REQ2", "Double"));
-        allocationService.addBookingRequest(new BookingRequest("REQ3", "Single"));
-        allocationService.addBookingRequest(new BookingRequest("REQ4", "Suite"));
-        allocationService.addBookingRequest(new BookingRequest("REQ5", "Single")); // Should fail (inventory over)
+        // Simulating confirmed bookings (from Use Case 6)
+        Reservation r1 = new Reservation("RES-101", "Single", "SI-12345");
+        Reservation r2 = new Reservation("RES-102", "Double", "DO-54321");
+        Reservation r3 = new Reservation("RES-103", "Single", "SI-67890");
+        Reservation r4 = new Reservation("RES-104", "Suite", "SU-11111");
 
-        // Process bookings
-        allocationService.processBookings();
+        // Store in booking history
+        history.addReservation(r1);
+        history.addReservation(r2);
+        history.addReservation(r3);
+        history.addReservation(r4);
 
-        // Display final state
-        allocationService.displayAllocations();
-        inventoryService.displayInventory();
+        // Admin views booking history
+        List<Reservation> allReservations = history.getAllReservations();
+
+        // Display detailed bookings
+        reportService.displayAllBookings(allReservations);
+
+        // Generate summary report
+        reportService.generateSummary(allReservations);
     }
 }
