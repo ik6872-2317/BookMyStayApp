@@ -111,8 +111,9 @@ class RoomAllocationService {
     }
 }
 
+
 // Main Class
-public class UseCase6RoomAllocationService {
+public class BookMyStayApp {
 
     public static void main(String[] args) {
 
