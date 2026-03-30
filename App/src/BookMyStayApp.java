@@ -59,8 +59,6 @@ class BookingRequestQueue {
         return requestQueue.peek(); // only view, not remove
     }
 }
-
-// Main Driver Class
 public class BookMyStayApp {
 
     public static void main(String[] args) {
